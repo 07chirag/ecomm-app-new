@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: ecomm-app
-          image: happys4656/ecomm-app:1
+          image: happys4656/ecomm-app:2
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
