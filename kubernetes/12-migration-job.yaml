@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: db-migration
-  namespace: easyshop
+  namespace: ecomm-app
 spec:
   template:
     spec:

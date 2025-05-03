@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: easyshop-ingress
-  namespace: easyshop
+  namespace: ecomm-app
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
     kubernetes.io/ingress.class: "nginx"
@@ -11,7 +11,7 @@ spec:
   tls:
   - hosts:
     - easyshop.letsdeployit.com
-    secretName: easyshop-tls-secret  # Cert-Manager will manage this
+    secretName: ecommpapp-tls-secret  # Cert-Manager will manage this
   rules:
   - host: easyshop.letsdeployit.com
     http:

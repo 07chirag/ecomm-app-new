@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mongodb-service
-  namespace: easyshop
+  namespace: ecomm-app
 spec:
   ports:
     - port: 27017
