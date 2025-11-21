@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    SONAR_TOKEN = credentials('SONAR_TOKEN')
+    SONAR_TOKEN = credentials('SONAR_TOKEN')   // make sure this credential exists in Jenkins
     SONAR_HOST_URL = 'http://sonarqube:9000'
     SONAR_PROJECT_KEY = "${JOB_NAME}"
   }
@@ -24,37 +24,44 @@ pipeline {
 
     stage('Run Tests') {
       steps {
-        // keep tests non-blocking; change if you add real tests
+        // keep tests non-blocking for now (remove || true when you add real tests)
         sh 'npm test || true'
       }
     }
 
     stage('Sonar Analysis') {
       steps {
-        // use single-quoted multiline shell to avoid Groovy interpolation of secrets
-        sh '''
-          # install sonar scanner for this run (no-save keeps package.json unchanged)
-          npm install --no-save sonarqube-scanner
+        // run sonar analysis inside the Jenkins Sonar configuration named "Sonar"
+        withSonarQubeEnv('Sonar') {
+          sh '''
+            # install scanner for this run (keeps package.json unchanged)
+            npm install --no-save sonarqube-scanner
 
-          # export credentials for the scanner script (use shell expansion to avoid exposing in Jenkins logs)
-          export SONAR_TOKEN="$SONAR_TOKEN"
-          export SONAR_HOST_URL="$SONAR_HOST_URL"
-          export SONAR_PROJECT_KEY="$SONAR_PROJECT_KEY"
+            # export secrets & run the JS scanner
+            export SONAR_TOKEN="$SONAR_TOKEN"
+            export SONAR_HOST_URL="$SONAR_HOST_URL"
+            export SONAR_PROJECT_KEY="$SONAR_PROJECT_KEY"
 
-          # run sonar-runner.js
-          node sonar-runner.js
-        '''
+            node sonar-runner.js
+          '''
+        }
       }
     }
 
     stage('Quality Gate') {
       steps {
-        withSonarQubeEnv('sonarqube') {
-          timeout(time: 2, unit: 'MINUTES') {
-            waitForQualityGate abortPipeline: true
-          }
+        // wait for SonarQube Quality Gate result (will abort pipeline if gate fails)
+        timeout(time: 5, unit: 'MINUTES') {
+          waitForQualityGate abortPipeline: true
         }
       }
+    }
+  }
+
+  post {
+    always {
+      // collect basic logs/artifacts if needed
+      archiveArtifacts artifacts: 'sonar-report/**', allowEmptyArchive: true
     }
   }
 }
