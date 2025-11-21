@@ -9,7 +9,9 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      steps { checkout scm }
+      steps {
+        checkout scm
+      }
     }
 
     stage('Install Dependencies') {
@@ -22,18 +24,26 @@ pipeline {
 
     stage('Run Tests') {
       steps {
+        // keep tests non-blocking; change if you add real tests
         sh 'npm test || true'
       }
     }
 
     stage('Sonar Analysis') {
       steps {
-        sh """
-          export SONAR_TOKEN=${SONAR_TOKEN}
-          export SONAR_HOST_URL=${SONAR_HOST_URL}
-          export SONAR_PROJECT_KEY=${SONAR_PROJECT_KEY}
+        // use single-quoted multiline shell to avoid Groovy interpolation of secrets
+        sh '''
+          # install sonar scanner for this run (no-save keeps package.json unchanged)
+          npm install --no-save sonarqube-scanner
+
+          # export credentials for the scanner script (use shell expansion to avoid exposing in Jenkins logs)
+          export SONAR_TOKEN="$SONAR_TOKEN"
+          export SONAR_HOST_URL="$SONAR_HOST_URL"
+          export SONAR_PROJECT_KEY="$SONAR_PROJECT_KEY"
+
+          # run sonar-runner.js
           node sonar-runner.js
-        """
+        '''
       }
     }
 
