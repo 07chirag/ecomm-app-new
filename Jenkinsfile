@@ -1,7 +1,5 @@
 pipeline {
-  agent {
-    docker { image 'node:20' }
-  }
+  agent any
 
   environment {
     SONAR_TOKEN = credentials('SONAR_TOKEN')
@@ -10,17 +8,25 @@ pipeline {
   }
 
   stages {
-    stage('Checkout') { steps { checkout scm } }
+    stage('Checkout') {
+      steps { checkout scm }
+    }
 
     stage('Install Dependencies') {
-      steps { sh 'npm ci' }
+      steps {
+        sh 'node -v || true'
+        sh 'npm -v || true'
+        sh 'npm ci'
+      }
     }
 
     stage('Run Tests') {
-      steps { sh 'npm test || true' }
+      steps {
+        sh 'npm test || true'
+      }
     }
 
-    stage('SonarQube Analysis') {
+    stage('Sonar Analysis') {
       steps {
         sh """
           export SONAR_TOKEN=${SONAR_TOKEN}
